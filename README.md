@@ -1,1 +1,3 @@
-# gpu-project
+# GPU-accelerated Neuronal Light Field Imaging Analysis Pipeline
+
+Light field microscopy (LFM) is a an exciting advancement in optical imaging. It allows a three dimensional volume to be reconstructed from a single, two dimensional camera frame. This has proved to be advantageous for imaging three dimensional neurons as fine spatial resolution can be scarified for efficient light collection. However, the reconstruction process is time consuming and very computationally intense. Graphical Processing Units (GPU) systems are known to significantly speed up computational processes. This project aims to implement and test a tailored Python GPU-optimised script to accelerate the processing of neuronal light fields. 
