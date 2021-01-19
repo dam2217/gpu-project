@@ -6,6 +6,8 @@ A MWE (ish) to demonstrate our dconvolution approach
 Created on Fri Jul  3 13:23:26 2020
 
 @author: peter
+
+Modifying it - Dimitra Marmaropoulou
 """
 
 import deconvolve as de
@@ -132,18 +134,19 @@ def rectify_image(im,r,center,new_center,Nnum):
 rectified = rectify_image(im,r,center,new_center,Nnum)
 
 
-
+@profile
 def forward_project(volume,H,locs):
     '''
     Projects forward from the object space to the LF camera image    
     
     '''
-    
+    print("function start")
     result = np.zeros((2048,2048))
     volume_upsamp = np.zeros((volume.shape[0],2048,2048))
     volume_upsamp[:,locs[0],locs[1]] = volume
     for i in range(H.shape[0]):
         result += scipy.signal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
+    print("function end")
     return result
     
 def backward_project(image,H,locs):
