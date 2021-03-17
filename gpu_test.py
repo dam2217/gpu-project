@@ -44,6 +44,13 @@ locs = get_locs(new_center, Nnum, rad_spots = rad_spots)
 #Save intermediate iterations to find best value
 iterations = [1,5] #why do we want to do this
 
+H = de.load_H_part(df_path = './psf/sim_df.xlsx',
+                        folder_to_data = './psf/',
+                        zmin = -60*10**-6,
+                        zmax = 60*10**-6,
+                        zstep = 10)
+
+
 #Warp image so MLA is straight, use backward projection as start guess
 total_iterations = 0
 sum_ = np.sum(im)
@@ -154,7 +161,6 @@ start_guess = backward_project(gpu_rectified/gpu_sum_,gpu_H,locs)
 
 result = cp.zeros((len(iterations), gpu_H.shape[0], locs[0].shape[-2],locs[0].shape[-1]))
 
-iterations = [1,5]
 for idx,iter_number in enumerate(iterations):
     
         #calculate number of iterations to do
@@ -170,3 +176,5 @@ for idx,iter_number in enumerate(iterations):
     
         #save intermediate results because this can take a long time
         total_iterations += iterations_this_go
+        
+        cp.save('./result.npy',result)
