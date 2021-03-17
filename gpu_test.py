@@ -5,6 +5,7 @@ import tifffile
 import scipy.interpolate as interp
 import scipy
 import cupy
+import cusignal
 
 #Load an example cell image
 
@@ -97,3 +98,75 @@ rectified = rectify_image(im,r,center,new_center,Nnum)
 
 #Transforming into cupy array 
 gpu_rectified = cp.array(rectified)
+
+
+def forward_project(volume,H,locs):
+  result = cp.zeros((2048,2048))
+  volume_upsamp = cp.zeros((volume.shape[0],2048,2048)) 
+  '''
+  makes a 3D array with the dimensions of the row number volume, and then 2048,2048, which is the cam_size - this is kinda like the length function in matlab
+  '''
+  volume = volume_upsamp[:,locs[0],locs[1]]
+
+  for i in range(H.shape[0]):
+    result += cusignal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
+
+  return result
+
+def backward_project(image,H,locs):
+    '''
+    projects backward from the camera image to the object space
+
+    '''
+    result = cp.zeros((H.shape[0],2048,2048))
+    for i in range(H.shape[0]):
+        result[i,...] = cusignal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
+    volume = result[:,locs[0],locs[1]]
+    return volume
+
+def regularization(guess,lamda):
+    
+    grad = cp.gradient(guess)
+    euler = grad/cp.abs(grad)    
+    diverg = cp.gradient(euler,axis=0)[0] + cp.gradient(euler,axis=1)[1] + cp.gradient(euler,axis=2)[2]
+    
+    regularizer=lamda*diverg
+    
+    return regularizer
+
+#function written by dimitra 
+def Reg_(start_guess,measured,H,iterations,locs,lamda):  
+
+    norm_fac = cp.sum(cp.sum(H,-1),-1)[:,None,None]
+
+    result = cp.copy(start_guess)
+    
+    for _ in range(iterations):
+        div = measured/(forward_project(result,H,locs)+1*10**-7)
+        div[cp.isnan(div)] = 0
+        error = backward_project(div,H,locs)
+        regularizer = regularization(result,lamda)
+        result *= error/(norm_fac+regularizer)
+                
+    return result
+
+start_guess = backward_project(gpu_rectified/gpu_sum_,gpu_H,locs)
+
+result = cp.zeros((len(iterations), gpu_H.shape[0], locs[0].shape[-2],locs[0].shape[-1]))
+
+iterations = [1,5]
+for idx,iter_number in enumerate(iterations):
+    
+        #calculate number of iterations to do
+        iterations_this_go = iter_number - total_iterations
+
+    
+        #if we have not done any iterations this go use start guess, else use result of previous iteration
+        if total_iterations == 0:
+            #array indexed: iteration level, z, t, i,j
+            result[idx,:, :,:] = Reg_(start_guess, gpu_rectified/gpu_sum_, gpu_H, iterations_this_go,locs,lamda)
+        else:
+            result[idx,:,:,:] = Reg_(result[idx-1,:, :,:], gpu_rectified/gpu_sum_, gpu_H, iterations_this_go,locs,lamda)                
+    
+        #save intermediate results because this can take a long time
+        total_iterations += iterations_this_go
