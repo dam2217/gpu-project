@@ -4,13 +4,15 @@ import numpy as np
 import tifffile
 import scipy.interpolate as interp
 import scipy
-import cupy
+import cupy as cp
 import cusignal
+import deconvolve as de
+from cupyx import scipy
 
 #Load an example cell image
 
 #----------------------Change this location of this-----------------#
-im = tifffile.imread('/content/drive/MyDrive/beads_660nm.tif')
+im = tifffile.imread('./beads_660nm.tif')
 
 #Parameters for inter-lens vector, r, and lens center, center. 
 r,center = (np.array([0.117, 19.525]), np.array([1020.4, 1024.1]))
@@ -54,6 +56,7 @@ H = de.load_H_part(df_path = './psf/sim_df.xlsx',
 #Warp image so MLA is straight, use backward projection as start guess
 total_iterations = 0
 sum_ = np.sum(im)
+gpu_sum_ = cp.array(sum_)
 
 def get_warped_grid(r,center,new_center,Nnum,im_size = 2048):
     '''
@@ -156,6 +159,8 @@ def Reg_(start_guess,measured,H,iterations,locs,lamda):
         result *= error/(norm_fac+regularizer)
                 
     return result
+
+gpu_H = cp.array(H)
 
 start_guess = backward_project(gpu_rectified/gpu_sum_,gpu_H,locs)
 
