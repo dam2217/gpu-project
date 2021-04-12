@@ -4,8 +4,9 @@ import numpy as np
 import tifffile
 import scipy.interpolate as interp
 import scipy
-import cupy
+import cupy as cp
 import cusignal
+import deconvolve as de
 
 #Load an example cell image
 
@@ -19,6 +20,7 @@ Nnum = 19 # Number of pixels under microlenses
 new_center = (1023,1023) # where to place new center when warping the data to standard template
 rad_spots = 50 # number of microlenses in frame
 lamda = 0.01 #this is the regularization factor
+iterations = [1,5]
 
 
 #Gets mapping between LF image pixels and recon volume pixels
@@ -54,6 +56,8 @@ H = de.load_H_part(df_path = './psf/sim_df.xlsx',
 #Warp image so MLA is straight, use backward projection as start guess
 total_iterations = 0
 sum_ = np.sum(im)
+gpu_sum_ = cp.array(sum_)
+gpu_H = cp.array(H)
 
 def get_warped_grid(r,center,new_center,Nnum,im_size = 2048):
     '''
@@ -156,9 +160,9 @@ for idx,iter_number in enumerate(iterations):
         #if we have not done any iterations this go use start guess, else use result of previous iteration
         if total_iterations == 0:
             #array indexed: iteration level, z, t, i,j
-            result[idx,:, :,:] = RL_(start_guess, gpu_rectified/gpu_sum_, gpu_H, iterations_this_go,locs,lamda)
+            result[idx,:, :,:] = RL_(start_guess, gpu_rectified/gpu_sum_, gpu_H, iterations_this_go,locs)
         else:
-            result[idx,:,:,:] = RL_(result[idx-1,:, :,:], gpu_rectified/gpu_sum_, gpu_H, iterations_this_go,locs,lamda)                
+            result[idx,:,:,:] = RL_(result[idx-1,:, :,:], gpu_rectified/gpu_sum_, gpu_H, iterations_this_go,locs)                
     
         #save intermediate results because this can take a long time
         total_iterations += iterations_this_go
