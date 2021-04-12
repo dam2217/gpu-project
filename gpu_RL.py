@@ -10,7 +10,7 @@ import cusignal
 #Load an example cell image
 
 #----------------------Change this location of this-----------------#
-im = tifffile.imread('/content/drive/MyDrive/beads_660nm.tif')
+im = tifffile.imread('./beads_660nm.tif')
 
 #Parameters for inter-lens vector, r, and lens center, center. 
 r,center = (np.array([0.117, 19.525]), np.array([1020.4, 1024.1]))
