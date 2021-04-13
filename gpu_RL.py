@@ -121,7 +121,7 @@ def forward_project(volume,H,locs):
   for i in range(H.shape[0]):
     result += cusignal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
     
-    cp.save('./forward_result.npy',result)
+  cp.save('./forward_result.npy',result)
   return result
 
 def backward_project(image,H,locs):
