@@ -133,7 +133,7 @@ def backward_project(image,H,locs):
         result[i,...] = cusignal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
     volume = result[:,locs[0],locs[1]]
     
-    cp.save('./backward_result.npy',result)
+    cp.save('./backward_result.npy',volume)
     
     return volume
 

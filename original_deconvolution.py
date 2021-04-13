@@ -146,7 +146,7 @@ def forward_project(volume,H,locs):
     volume_upsamp[:,locs[0],locs[1]] = volume
     for i in range(H.shape[0]):
         result += scipy.signal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
-    np.save('./forward_cpu.npy')
+    np.save('./forward_cpu.npy',result)
     return result
     
 def backward_project(image,H,locs):
@@ -158,7 +158,7 @@ def backward_project(image,H,locs):
     for i in range(H.shape[0]):
         result[i,...] = scipy.signal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
     volume = result[:,locs[0],locs[1]]
-    np.save('./backward_cpu.npy')
+    np.save('./backward_cpu.npy',volume)
     return volume
 
 #function written by Dimitra 
@@ -250,10 +250,10 @@ for idx,iter_number in enumerate(iterations):
         if Reg:
             np.save(Reg_save_loc,result_reg)
 
-if ISRA:            
-    pg.image(result_is[-1,...])
-if RL:
-    pg.image(result_rl[-1,...])
+#if ISRA:            
+ #   pg.image(result_is[-1,...])
+#if RL:
+    #pg.image(result_rl[-1,...])
     
-if Reg:
-    pg.image(result_reg[-1,...])
+#if Reg:
+ #   pg.image(result_reg[-1,...])
