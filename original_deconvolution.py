@@ -31,8 +31,8 @@ lamda = 0.01 #this is the regularization factor
 
 #Whether to use ISRA or RL schemes
 ISRA = 0
-RL = 0
-Reg = 1
+RL = 1
+Reg = 0
 
 ISRA_save_loc = './ISRA_result.npy'
 RL_save_loc = './RL_result.npy'
