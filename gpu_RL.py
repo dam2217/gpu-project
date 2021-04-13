@@ -99,7 +99,7 @@ def rectify_image(im,r,center,new_center,Nnum):
     interped = interp.RectBivariateSpline(x-center[0],x-center[1],im)
     
     warped_coords = get_warped_grid(r,center,new_center,Nnum,im_size = im_size)
-    testttt = interped(warped_coords[0,...],warped_coords[1,...],grid = False)
+    #testttt = interped(warped_coords[0,...],warped_coords[1,...],grid = False)
     return interped(warped_coords[0,...],warped_coords[1,...],grid = False)
 
 
@@ -120,7 +120,8 @@ def forward_project(volume,H,locs):
 
   for i in range(H.shape[0]):
     result += cusignal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
-
+    
+    cp.save('./forward_result.npy',result)
   return result
 
 def backward_project(image,H,locs):
@@ -131,6 +132,9 @@ def backward_project(image,H,locs):
     for i in range(H.shape[0]):
         result[i,...] = cusignal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
     volume = result[:,locs[0],locs[1]]
+    
+    cp.save('./backward_result.npy',result)
+    
     return volume
 
 def RL_(start_guess,measured,H,iterations,locs):

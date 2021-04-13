@@ -134,19 +134,19 @@ def rectify_image(im,r,center,new_center,Nnum):
 rectified = rectify_image(im,r,center,new_center,Nnum)
 
 
-@profile
+#@profile
 def forward_project(volume,H,locs):
     '''
     Projects forward from the object space to the LF camera image    
     
     '''
-    print("function start")
+    
     result = np.zeros((2048,2048))
     volume_upsamp = np.zeros((volume.shape[0],2048,2048))
     volume_upsamp[:,locs[0],locs[1]] = volume
     for i in range(H.shape[0]):
         result += scipy.signal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
-    print("function end")
+    np.save('./forward_cpu.npy')
     return result
     
 def backward_project(image,H,locs):
@@ -158,6 +158,7 @@ def backward_project(image,H,locs):
     for i in range(H.shape[0]):
         result[i,...] = scipy.signal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
     volume = result[:,locs[0],locs[1]]
+    np.save('./backward_cpu.npy')
     return volume
 
 #function written by Dimitra 
@@ -186,7 +187,7 @@ def RL_(start_guess,measured,H,iterations,locs):
         div[np.isnan(div)] = 0
         error = backward_project(div,H,locs)
         result *= error/norm_fac
-    print('uiuoiut')
+    
     return result
 
 def ISRA_(start_guess,measured,H,iterations,locs):    
