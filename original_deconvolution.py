@@ -7,7 +7,7 @@ Created on Fri Jul  3 13:23:26 2020
 
 @author: peter
 
-Modifying it - Dimitra Marmaropoulou
+Modified by Dimitra Marmaropoulou
 """
 
 import deconvolve as de
@@ -16,6 +16,9 @@ import pyqtgraph as pg
 import tifffile
 import scipy.interpolate as interp
 import scipy
+import timeit
+
+starttime = timeit.default_timer()
 
 #Load an example cell image
 im = tifffile.imread('./beads_660nm.tif')
@@ -35,7 +38,7 @@ RL = 1
 Reg = 0
 
 ISRA_save_loc = './ISRA_result.npy'
-RL_save_loc = './RL_result.npy'
+RL_save_loc = './RL_result3.npy'
 Reg_save_loc = './Reg_result.npy'
 
 #Gets mapping between LF image pixels and recon volume pixels
@@ -146,7 +149,8 @@ def forward_project(volume,H,locs):
     volume_upsamp[:,locs[0],locs[1]] = volume
     for i in range(H.shape[0]):
         result += scipy.signal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
-    np.save('./forward_cpu.npy',result)
+        # print(np.amax(result))
+    # np.save('./forward_cpu.npy',result)
     return result
     
 def backward_project(image,H,locs):
@@ -158,7 +162,7 @@ def backward_project(image,H,locs):
     for i in range(H.shape[0]):
         result[i,...] = scipy.signal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
     volume = result[:,locs[0],locs[1]]
-    np.save('./backward_cpu.npy',volume)
+    # np.save('./backward_cpu.npy',volume)
     return volume
 
 #function written by Dimitra 
@@ -175,7 +179,7 @@ def regularization(guess,lamda):
 
 start_guess = backward_project(rectified/sum_,H,locs)
 
-
+@profile
 def RL_(start_guess,measured,H,iterations,locs):
     #richardson lucy iteration scheme
     
@@ -243,13 +247,15 @@ for idx,iter_number in enumerate(iterations):
     
         #save intermediate results because this can take a long time
         total_iterations += iterations_this_go
-        if ISRA:
-            np.save(ISRA_save_loc,result_is)
-        if RL:
-            np.save(RL_save_loc,result_rl)
-        if Reg:
-            np.save(Reg_save_loc,result_reg)
+        # if ISRA:
+        #     np.save(ISRA_save_loc,result_is)
+        # if RL:
+        #     np.save(RL_save_loc,result_rl)
+        #     # print(np.amax(result_rl))
+        # if Reg:
+        #     np.save(Reg_save_loc,result_reg)
 
+# print("The time difference is :", timeit.default_timer() - starttime)
 #if ISRA:            
  #   pg.image(result_is[-1,...])
 #if RL:
