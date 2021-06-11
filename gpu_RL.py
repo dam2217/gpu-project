@@ -7,7 +7,12 @@ import scipy
 import cupy as cp
 import cusignal
 import deconvolve as de
+import timeit
 
+mempool = cp.get_default_memory_pool()
+pinned_mempool = cp.get_default_pinned_memory_pool()
+
+starttime = timeit.default_timer()
 #Load an example cell image
 
 #----------------------Change this location of this-----------------#
@@ -110,18 +115,19 @@ rectified = rectify_image(im,r,center,new_center,Nnum)
 gpu_rectified = cp.array(rectified)
 
 
+
 def forward_project(volume,H,locs):
   result = cp.zeros((2048,2048))
   volume_upsamp = cp.zeros((volume.shape[0],2048,2048)) 
   '''
   makes a 3D array with the dimensions of the row number volume, and then 2048,2048, which is the cam_size - this is kinda like the length function in matlab
   '''
-  volume = volume_upsamp[:,locs[0],locs[1]]
+  volume_upsamp[:,locs[0],locs[1]] = volume
 
   for i in range(H.shape[0]):
     result += cusignal.fftconvolve(volume_upsamp[i,...],H[i,...],mode = 'same')
-    
-  cp.save('./forward_result.npy',result)
+    # print(cp.amax(result))
+  # cp.save('./forward_result.npy',result)
   return result
 
 def backward_project(image,H,locs):
@@ -133,10 +139,11 @@ def backward_project(image,H,locs):
         result[i,...] = cusignal.fftconvolve(image,H[i,::-1,::-1],mode = 'same')
     volume = result[:,locs[0],locs[1]]
     
-    cp.save('./backward_result.npy',volume)
+    # cp.save('./backward_result.npy',volume)
     
     return volume
 
+@profile
 def RL_(start_guess,measured,H,iterations,locs):
     #richardson lucy iteration scheme
     
@@ -171,4 +178,10 @@ for idx,iter_number in enumerate(iterations):
         #save intermediate results because this can take a long time
         total_iterations += iterations_this_go
         
-        cp.save('./result.npy',result)
+        # print(cp.amax(result))
+        # cp.save('./result3.npy',result)
+
+# print("The time difference is :", timeit.default_timer() - starttime)
+
+mempool.free_all_blocks()
+pinned_mempool.free_all_blocks()
